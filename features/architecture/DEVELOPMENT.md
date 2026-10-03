@@ -1,0 +1,72 @@
+# Development — KINETIQ
+
+Local setup, environment variables, testing and CI. Commands for the full target layout are in [CLAUDE.md](../../CLAUDE.md#commands); this doc covers what you need to get running and what exists today.
+
+## What exists today
+
+| Part | State |
+| --- | --- |
+| `apps/mobile` | Expo SDK 57 scaffold (default template: Expo Router, TypeScript, routes in `src/app/`). |
+| Repo root | pnpm workspace (`pnpm-workspace.yaml`, root `package.json` with shortcut scripts). |
+| `services/`, `packages/`, `infra/` | Not started. Build order: contracts → `kinetiq-core` → database → API → workers → app. |
+
+## Prerequisites
+
+- Node 24 and pnpm 12
+- `uv` (Python 3.12 is installed by `uv` when the backend lands)
+- For native builds: Android Studio (Android) or Xcode on macOS (iOS); or EAS Build in the cloud
+
+## App
+
+Run from the repo root:
+
+```bash
+pnpm install
+pnpm mobile                    # Expo dev server
+pnpm web                       # run in the browser
+pnpm --filter mobile android   # run on Android
+pnpm --filter mobile ios       # run on iOS (macOS only)
+pnpm lint
+pnpm typecheck
+pnpm --filter mobile exec expo export -p web   # static web build into apps/mobile/dist
+```
+
+- Add dependencies with `pnpm --filter mobile exec expo install <package>` so versions match the SDK.
+- Expo ships breaking changes each SDK release; check the versioned docs (`https://docs.expo.dev/versions/v57.0.0/`) before using an Expo API.
+- Camera and on-device pose need native modules, so the app needs a development build (`npx expo run:android|ios` or `eas build --profile development`) rather than Expo Go.
+- Never edit generated `ios/` or `android/` folders by hand; configure native behaviour in `app.json` and config plugins.
+
+## Environment variables
+
+Names other than `EXPO_PUBLIC_POSE_ENDPOINT` are proposed and become fixed when the code that reads them is written. Secrets live in `.env` files (gitignored) locally and in DigitalOcean / CI secrets elsewhere.
+
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `EXPO_PUBLIC_API_URL` | App | Base URL of the API |
+| `EXPO_PUBLIC_POSE_ENDPOINT` | App (web, showcase rig) | Local TensorRT pose server |
+| `DATABASE_URL` | API, workers | Neon pooled connection string |
+| `DATABASE_URL_DIRECT` | Alembic | Neon direct connection string |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | API, workers | Object storage |
+| `EXPO_PUBLIC_AUTH_URL` | App | Base URL of the auth service |
+| `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` | Auth service | Signing secret and public base URL |
+| `AUTH_JWKS_URL`, `AUTH_ISSUER` | API | Verifying JWTs issued by the auth service |
+| `NVIDIA_API_KEY` | API | Hosted NIM and Riva |
+| `SENTRY_DSN`, `LOGFIRE_TOKEN` | API, workers, app | Observability |
+
+Anything prefixed `EXPO_PUBLIC_` is bundled into the app and visible to users; never put a secret there.
+
+## Testing
+
+Rules are in the shared [conventions](../../CLAUDE.md#conventions). In practice:
+
+- `kinetiq-core`: unit tests with known-answer fixtures (synthetic keypoints with known angles).
+- API: integration tests against a Neon branch or local Postgres.
+- App: lint and typecheck on every change; run on web plus at least one native platform before merging UI work.
+
+## CI (planned)
+
+1. Python: `ruff check`, `ruff format --check`, `pyright`, `pytest`.
+2. Schema changes: create a Neon branch for the PR, run migrations, run the test suite against it (see [DATABASE.md](../data/DATABASE.md#migrations-and-branching)).
+3. App: `lint`, `typecheck`, web export build.
+4. Contracts: regenerate Pydantic + TS types and the API client; fail if the output differs from what is committed.
+5. Dependency updates and vulnerability scanning.

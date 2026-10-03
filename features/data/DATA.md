@@ -1,0 +1,118 @@
+# Data — KINETIQ
+
+The keypoint contract, metric definitions, storage layout and data lifecycle. Change this doc in the same commit as any change to `packages/contracts` or `kinetiq-core` metrics.
+
+## Data classes
+
+| Class | Examples | Where it lives | Sensitivity |
+| --- | --- | --- | --- |
+| Identity | Name, email, auth ID | Postgres (`auth` schema + `users`) | Personal data |
+| Clinical context | Condition, surgery date, programme, pain reports, clinician notes | Postgres | Special category (health) |
+| Movement data | Keypoint sequences | Object storage (`keypoints/`) | Special category (health) |
+| Derived measures | Metrics, tests, compensation events, forecasts, joint loads | Postgres | Special category (health) |
+| Twin assets | USD, glTF, USDZ | Object storage (`twins/`) | Special category (health) |
+| Training data | De-identified keypoint sets (consented), synthetic data | Object storage (`datasets/`) | Pseudonymised / synthetic |
+| Operational | Logs, traces, job metadata | Logfire, Sentry, Postgres | Must contain no health data |
+| **Video** | — | **Never stored or transmitted** | — |
+
+## Canonical keypoint contract: `kq-skel-v1`
+
+All platforms convert their pose model output into this skeleton before anything leaves the device.
+
+### Joints (index → name)
+
+| # | Joint | # | Joint | # | Joint |
+| --- | --- | --- | --- | --- | --- |
+| 0 | pelvis | 7 | left_shoulder | 14 | right_knee |
+| 1 | left_hip | 8 | right_shoulder | 15 | left_ankle |
+| 2 | right_hip | 9 | left_elbow | 16 | right_ankle |
+| 3 | spine_mid | 10 | right_elbow | 17 | left_heel |
+| 4 | chest | 11 | left_wrist | 18 | right_heel |
+| 5 | neck | 12 | right_wrist | 19 | left_foot_index |
+| 6 | head | 13 | left_knee | 20 | right_foot_index |
+
+Left/right are the **subject's** left and right.
+
+### Coordinates
+
+- 3D, camera space, metres. Right-handed: +X to the camera's right, +Y up, +Z toward the camera.
+- Per joint: `x, y, z, confidence` (confidence 0–1). Missing joint: `confidence = 0`, coordinates `NaN`.
+- Timestamps: milliseconds from scan start, monotonic.
+- Target 30 Hz; workers resample to 30 Hz.
+- Body-frame transforms, smoothing and gap filling happen in `kinetiq-core`, never on device.
+
+### Scan header (JSON)
+
+```json
+{
+  "format": "kqk",
+  "format_version": 1,
+  "skeleton": "kq-skel-v1",
+  "scan_id": "uuid",
+  "pose_model": {"id": "kq-pose", "version": "1.0.0", "runtime": "tflite"},
+  "device": {"platform": "ios", "model": "iPhone15,3", "app_version": "0.1.0"},
+  "camera": {"fps": 30, "width": 1280, "height": 720, "orientation": "portrait", "height_m": null},
+  "battery": {"id": "rehab-knee", "version": "1"},
+  "segment": {"kind": "test", "code": "sts_30s"},
+  "frame_count": 900,
+  "started_at": "2026-10-03T09:15:00Z"
+}
+```
+
+### Binary file `*.kqk.gz`
+
+gzip of: `"KQK1"` (4 bytes) · `uint32 LE` header length · header JSON (UTF-8) · `frame_count` frames, each `int32 LE t_ms` + 21 × 4 `float32 LE` (x, y, z, confidence). Chosen because it is trivial to write from TypeScript (`DataView`) and Python (`numpy.frombuffer`). Workers convert to Parquet for analytics.
+
+## Metric catalogue (v1)
+
+Internal units are SI; presentation converts. Every metric row records `method_version`.
+
+| Code | Domain | Unit | Side | Definition |
+| --- | --- | --- | --- | --- |
+| `knee_flexion_peak` | Mobility | rad | L/R | Max angle between thigh (hip→knee) and shank (knee→ankle) vectors, as flexion from full extension |
+| `knee_extension_deficit` | Mobility | rad | L/R | Min flexion reached (0 = full extension) |
+| `hip_flexion_peak` | Mobility | rad | L/R | Max sagittal angle between trunk and thigh |
+| `shoulder_abduction_peak` | Mobility | rad | L/R | Max frontal angle between trunk and upper arm |
+| `knee_valgus_peak` | Compensation | rad | L/R | Max frontal-plane projection angle of hip-knee-ankle |
+| `trunk_lean_peak` | Compensation | rad | — | Max trunk deviation from vertical in the frontal plane |
+| `pelvic_drop_peak` | Compensation | rad | L/R | Max pelvic obliquity during single-leg stance |
+| `symmetry_index` | Symmetry | % | — | `100 × |L − R| / ((L + R) / 2)` for a named base metric (stored with `base_metric`) |
+| `com_sway_area` | Stability | m² | — | 95% confidence ellipse area of estimated centre-of-mass ground projection |
+| `single_leg_balance_time` | Stability | s | L/R | Time until stance loss or 30 s cap |
+| `sts_30s_count` | Test | count | — | Full stands completed in 30 seconds |
+| `tug_time` | Test | s | — | Timed Up and Go duration |
+| `rep_angular_velocity_mean` | Velocity | rad/s | L/R | Mean peak angular velocity of the primary joint per rep |
+| `rep_variability_cv` | Consistency | ratio | — | Coefficient of variation of primary-joint ROM across reps |
+| `fatigue_slope` | Fatigue | ratio/rep | — | Slope of normalised rep quality score across a set |
+| `knee_load_peak_est` | Load (sim) | N·m/kg | L/R | Peak knee joint moment estimate from S2 surrogate |
+
+Adding a metric: add it to `metric_definitions` (migration), implement it in `kinetiq-core` with known-answer tests, document it here.
+
+## Object storage layout
+
+```
+keypoints/{patient_id}/{scan_id}/v1.kqk.gz
+keypoints-parquet/{patient_id}/{scan_id}/v1.parquet
+twins/{patient_id}/{twin_version}/twin.usd | twin.glb | twin.usdz
+models/{model_id}/{version}/...            # artefacts + model card
+datasets/{name}/{version}/manifest.json     # immutable, hashes of every file
+sim/{job_id}/inputs|outputs/...
+exports/{request_id}/...                    # subject access request exports
+```
+
+Rules: buckets are private; access through short-lived pre-signed URLs only; server-side encryption on; object keys never contain names or emails.
+
+## Data lifecycle
+
+1. **Capture:** video stays on device and is discarded after pose.
+2. **Upload:** keypoints via pre-signed URL; checksum verified.
+3. **Process:** derived measures written to Postgres with versions.
+4. **Use:** patient and their linked clinicians only (RLS).
+5. **Training reuse:** only with explicit, separate research consent (`consents.consent_type = 'research_training'`). Data is copied into a pseudonymised dataset (random dataset IDs, no direct identifiers, dates shifted per subject).
+6. **Retention:** periods set in the DPIA, aligned with professional record-keeping guidance. Raw keypoints may have a shorter retention than derived clinical measures.
+7. **Deletion:** account deletion removes identity, clinical rows and objects; consented training datasets follow the consent terms recorded at collection.
+8. **Subject access:** export job produces a JSON + CSV bundle under `exports/`.
+
+## Synthetic data
+
+Synthetic sets carry `source = synthetic` in manifests and are never mixed into evaluation sets that gate real-world accuracy.
