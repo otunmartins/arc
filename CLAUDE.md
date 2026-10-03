@@ -73,7 +73,7 @@ uv run alembic -c infra/alembic.ini upgrade head
 uv run alembic -c infra/alembic.ini revision --autogenerate -m "msg"
 
 # Contracts (after changing packages/contracts)
-uv run python packages/contracts/build.py      # regenerate Pydantic + TS types
+uv run python packages/contracts/build.py      # regenerate JSON Schema + TS types from the Pydantic models
 
 # App
 pnpm install

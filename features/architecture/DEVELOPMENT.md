@@ -8,7 +8,9 @@ Local setup, environment variables, testing and CI. Commands for the full target
 | --- | --- |
 | `apps/mobile` | Expo SDK 57 scaffold (default template: Expo Router, TypeScript, routes in `src/app/`). |
 | Repo root | pnpm workspace (`pnpm-workspace.yaml`, root `package.json` with shortcut scripts). |
-| `services/`, `packages/`, `infra/` | Not started. Build order: contracts → `kinetiq-core` → database → API → workers → app. |
+| Repo root (Python) | `uv` workspace (`pyproject.toml`, `uv.lock`, Python 3.12) with ruff, pyright and pytest. |
+| `packages/contracts` | `kq-skel-v1` skeleton, scan header schema, `.kqk.gz` encoder/decoder in Python and TypeScript, with tests. Measurement schemas not yet added. |
+| `packages/kinetiq-core`, `services/`, `infra/` | Not started. Build order: `kinetiq-core` → database → API → workers → app. |
 
 ## Prerequisites
 
@@ -35,6 +37,23 @@ pnpm --filter mobile exec expo export -p web   # static web build into apps/mobi
 - Expo ships breaking changes each SDK release; check the versioned docs (`https://docs.expo.dev/versions/v57.0.0/`) before using an Expo API.
 - Camera and on-device pose need native modules, so the app needs a development build (`npx expo run:android|ios` or `eas build --profile development`) rather than Expo Go.
 - Never edit generated `ios/` or `android/` folders by hand; configure native behaviour in `app.json` and config plugins.
+
+## Python and contracts
+
+Run from the repo root:
+
+```bash
+uv sync                                       # create .venv and install the workspace
+uv run pytest                                 # Python tests
+uv run ruff check . && uv run ruff format .   # lint + format
+uv run pyright                                # type check (strict on contracts)
+pnpm test                                     # TypeScript tests
+uv run python packages/contracts/build.py     # after changing the Pydantic models
+```
+
+The Pydantic models in `packages/contracts/src` are the source of truth. `build.py` regenerates `schema/scan-header.schema.json`, `ts/src/skeleton.generated.ts` and `ts/src/header.generated.ts`; a Python test fails if the first two are stale.
+
+To refresh the cross-language fixtures after a format change, run each suite once with `UPDATE_FIXTURES=1`.
 
 ## Environment variables
 

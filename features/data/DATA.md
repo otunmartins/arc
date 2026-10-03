@@ -59,9 +59,26 @@ Left/right are the **subject's** left and right.
 }
 ```
 
+Header rules, enforced by the Pydantic model in `packages/contracts` (the source of the JSON Schema and TS types):
+
+- All fields are required; unknown fields are rejected. A new field means a new `format_version`.
+- `pose_model.runtime`: `tflite`, `coreml`, `onnx`, `mediapipe` or `tensorrt`.
+- `device.platform`: `ios`, `android`, `web` or `edge`. `segment.kind`: `assessment`, `exercise` or `test`.
+- `camera.orientation`: `portrait` or `landscape`. `camera.height_m` may be `null`.
+- `started_at` must carry a timezone.
+
 ### Binary file `*.kqk.gz`
 
 gzip of: `"KQK1"` (4 bytes) · `uint32 LE` header length · header JSON (UTF-8) · `frame_count` frames, each `int32 LE t_ms` + 21 × 4 `float32 LE` (x, y, z, confidence). Chosen because it is trivial to write from TypeScript (`DataView`) and Python (`numpy.frombuffer`). Workers convert to Parquet for analytics.
+
+Frame rules, checked on encode and decode in both languages:
+
+- The frame bytes must be exactly `frame_count × 340` (4 + 21 × 4 × 4 bytes per frame).
+- Timestamps start at 0 or later and never decrease (equal consecutive timestamps are allowed).
+- Confidence is between 0 and 1. Coordinates are finite, or `NaN` for a missing joint; a joint with any `NaN` coordinate must have confidence 0.
+- The Python decoder caps the decompressed size (64 MB by default) so an oversized upload is rejected.
+
+Two committed fixtures in `packages/contracts/fixtures/`, one written by each language, are decoded by both test suites to prove the implementations agree.
 
 ## Metric catalogue (v1)
 

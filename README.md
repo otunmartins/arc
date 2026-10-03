@@ -4,7 +4,7 @@ AI movement intelligence platform: a phone or webcam captures movement, on-devic
 
 ## Getting started
 
-Requires Node 24 and pnpm 12.
+Requires Node 24, pnpm 12 and uv.
 
 ```bash
 pnpm install
@@ -12,6 +12,10 @@ pnpm web          # app in the browser
 pnpm mobile       # Expo dev server (iOS / Android)
 pnpm lint
 pnpm typecheck
+pnpm test         # TypeScript tests
+
+uv sync
+uv run pytest     # Python tests
 ```
 
 ## Layout
@@ -19,7 +23,8 @@ pnpm typecheck
 | Path | What |
 | --- | --- |
 | [apps/mobile](apps/mobile) | Expo (React Native) app for iOS, Android and web |
+| [packages/contracts](packages/contracts) | Keypoint contract: skeleton, scan header, `.kqk.gz` codec (Python + TypeScript) |
 | [features](features/README.md) | Project documentation |
 | [CLAUDE.md](CLAUDE.md) | Golden rules, stack and conventions |
 
-Backend services, shared packages and infrastructure are planned; see [DEVELOPMENT.md](features/architecture/DEVELOPMENT.md) for what exists today and [ROADMAP.md](features/product/ROADMAP.md) for what comes next.
+The biomechanics library, backend services and infrastructure are planned; see [DEVELOPMENT.md](features/architecture/DEVELOPMENT.md) for what exists today and [ROADMAP.md](features/product/ROADMAP.md) for what comes next.

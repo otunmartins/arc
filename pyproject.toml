@@ -1,0 +1,34 @@
+[project]
+name = "kinetiq"
+version = "0.1.0"
+description = "KINETIQ workspace root"
+requires-python = ">=3.12"
+dependencies = ["kinetiq-contracts"]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.8", "pyright>=1.1.390"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+kinetiq-contracts = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["packages"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["packages/*/src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pyright]
+include = ["packages"]
+exclude = ["**/node_modules", "**/.venv"]
+strict = ["packages/contracts/src"]

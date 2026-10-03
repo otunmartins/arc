@@ -1,0 +1,205 @@
+{
+  "$defs": {
+    "Battery": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "title": "Battery",
+      "type": "object"
+    },
+    "Camera": {
+      "additionalProperties": false,
+      "properties": {
+        "fps": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        "orientation": {
+          "enum": [
+            "portrait",
+            "landscape"
+          ],
+          "type": "string"
+        },
+        "height_m": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fps",
+        "width",
+        "height",
+        "orientation",
+        "height_m"
+      ],
+      "title": "Camera",
+      "type": "object"
+    },
+    "Device": {
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "enum": [
+            "ios",
+            "android",
+            "web",
+            "edge"
+          ],
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "app_version": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "platform",
+        "model",
+        "app_version"
+      ],
+      "title": "Device",
+      "type": "object"
+    },
+    "PoseModel": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "runtime": {
+          "enum": [
+            "tflite",
+            "coreml",
+            "onnx",
+            "mediapipe",
+            "tensorrt"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "runtime"
+      ],
+      "title": "PoseModel",
+      "type": "object"
+    },
+    "Segment": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "assessment",
+            "exercise",
+            "test"
+          ],
+          "type": "string"
+        },
+        "code": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "code"
+      ],
+      "title": "Segment",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "kqk",
+      "type": "string"
+    },
+    "format_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "skeleton": {
+      "const": "kq-skel-v1",
+      "type": "string"
+    },
+    "scan_id": {
+      "format": "uuid",
+      "type": "string"
+    },
+    "pose_model": {
+      "$ref": "#/$defs/PoseModel"
+    },
+    "device": {
+      "$ref": "#/$defs/Device"
+    },
+    "camera": {
+      "$ref": "#/$defs/Camera"
+    },
+    "battery": {
+      "$ref": "#/$defs/Battery"
+    },
+    "segment": {
+      "$ref": "#/$defs/Segment"
+    },
+    "frame_count": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "started_at": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "required": [
+    "format",
+    "format_version",
+    "skeleton",
+    "scan_id",
+    "pose_model",
+    "device",
+    "camera",
+    "battery",
+    "segment",
+    "frame_count",
+    "started_at"
+  ],
+  "title": "ScanHeader",
+  "type": "object"
+}

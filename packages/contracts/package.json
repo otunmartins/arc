@@ -1,0 +1,20 @@
+{
+  "name": "@kinetiq/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "main": "ts/src/index.ts",
+  "types": "ts/src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "json-schema-to-typescript": "^16.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}
