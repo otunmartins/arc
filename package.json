@@ -5,6 +5,7 @@
   "scripts": {
     "mobile": "pnpm --filter mobile start",
     "web": "pnpm --filter mobile web",
+    "tunnel": "pnpm --filter mobile exec expo start --tunnel",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
