@@ -41,11 +41,14 @@ Cost guide at $0.76/hr (RTX 4000 Ada): two 4-hour sessions a week ≈ $27/month;
 
 The same container image runs as a Lepton **Batch Job**: the launcher submits the job with the image, command, GPU type and region (UK/EU), and Lepton releases the GPU when it finishes. Only `infra/gpu/` changes; job code does not. Confirm RTX-class GPUs for Omniverse jobs.
 
-## Showcase rig
+## Showcase setup
 
-- RTX laptop or Jetson Orin, webcam.
-- Local TensorRT pose server on `localhost`; web build pointed at it via `EXPO_PUBLIC_POSE_ENDPOINT`.
-- Local API + local Postgres (or a dedicated Neon branch) with demo data; works offline except NIM/Riva (cache demo responses as fallback).
+There is no local NVIDIA hardware (decision 025), so the showcase is an online demo.
+
+- Any laptop or phone with a camera; pose runs on that device in the app.
+- The deployed API and workers, with a dedicated Neon branch holding demo data.
+- NVIDIA in the demo is cloud-side: hosted NIM (explanations) and Riva (voice), plus results of GPU jobs run beforehand.
+- Needs a network connection. Cache demo NIM and Riva responses as a fallback for a poor venue connection.
 
 ## Release checklist
 

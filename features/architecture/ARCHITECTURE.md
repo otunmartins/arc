@@ -5,7 +5,7 @@
 ```
 ┌──────────────────────────── On device ─────────────────────────────┐
 │ Expo app (iOS / Android / web)                                     │
-│  camera → pose model (TFLite / ONNX / MediaPipe / TensorRT*)       │
+│  camera → pose model (TFLite / Core ML / ONNX / MediaPipe)         │
 │        → canonical keypoints (kq-skel-v1) → live cues, local UI    │
 └───────────────┬──────────────────────────────────────┬─────────────┘
                 │ HTTPS (REST)                          │ WSS (live session)
@@ -23,7 +23,6 @@
 │ queue, RLS   │────►│ synthetic data     │     │ GPU: sim, surrogate,  │
 └──────────────┘     └────────────────────┘     │      synthetic, train │
                                                 └──────────────────────┘
-* TensorRT only on NVIDIA hardware (RTX laptop, Jetson) — the showcase setup.
 ```
 
 ## Components
@@ -87,7 +86,7 @@ API or operator enqueues a GPU job → launcher script creates a GPU Droplet (or
 
 | Concern | Target |
 | --- | --- |
-| On-device pose | ≥ 25 fps on a mid-range phone; ≥ 30 fps on RTX/Jetson |
+| On-device pose | ≥ 25 fps on a mid-range phone or laptop browser |
 | Live cue latency | < 200 ms from movement to spoken or visual cue (on-device path) |
 | Scan processing | Results within 60 s of upload for a standard battery |
 | Availability | Best effort for MVP; no single patient session depends on GPU availability |

@@ -72,12 +72,11 @@ To refresh the cross-language fixtures after a format change, run each suite onc
 
 ## Environment variables
 
-Names other than `EXPO_PUBLIC_POSE_ENDPOINT` are proposed and become fixed when the code that reads them is written. Secrets live in `.env` files (gitignored) locally and in DigitalOcean / CI secrets elsewhere.
+Names are proposed and become fixed when the code that reads them is written. Secrets live in `.env` files (gitignored) locally and in DigitalOcean / CI secrets elsewhere.
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
 | `EXPO_PUBLIC_API_URL` | App | Base URL of the API |
-| `EXPO_PUBLIC_POSE_ENDPOINT` | App (web, showcase rig) | Local TensorRT pose server |
 | `DATABASE_URL` | API, workers | Neon pooled connection string |
 | `DATABASE_URL_DIRECT` | Alembic | Neon direct connection string |
 | `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | API, workers | Object storage |

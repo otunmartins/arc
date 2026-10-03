@@ -20,7 +20,7 @@ The Inception showcase lands at the end of phase 2.
 - Recovery forecast + drift flag
 - Clinician dashboard
 - LLM explanation of measured results (NIM + NeMo Guardrails)
-- Showcase rig: RTX laptop / Jetson, the same pose model converted to TensorRT and run locally
+- Showcase setup: online demo on any camera device, NVIDIA parts served from the cloud (NIM, Riva)
 - **Gate:** NVIDIA Inception showcase demo
 
 ## Phase 3 — Simulation depth

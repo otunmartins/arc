@@ -1,12 +1,12 @@
 # AI infrastructure — KINETIQ
 
-How models are trained, served, simulated and governed. The stack is built on NVIDIA tooling. Through the showcase the pose model is an existing open model, accelerated with TensorRT on NVIDIA hardware; our own trained pose model arrives in Phase 3 (see [DECISIONS.md](../product/DECISIONS.md), decision 020).
+How models are trained, served, simulated and governed. The stack is built on NVIDIA tooling. All NVIDIA use is in the cloud: hosted services and GPU jobs that work on keypoints, never on video (see [DECISIONS.md](../product/DECISIONS.md), decision 025). Pose runs on the user's device with an existing open model; our own trained pose model arrives in Phase 3 (decision 020).
 
 ## Model and simulation inventory
 
 | ID | Component | Purpose | Tech | Runs where |
 | --- | --- | --- | --- | --- |
-| M1 | Pose model | Video → 3D keypoints | Phases 1–2: MediaPipe BlazePose, mapped to `kq-skel-v1` (16 joints direct, 5 derived). Phase 3: our own model trained with TAO Toolkit on real + synthetic data (lead candidate: BodyPose3DNet) | Phone: TFLite / Core ML / ONNX export · Web: ONNX Runtime Web or MediaPipe · NVIDIA HW: TensorRT |
+| M1 | Pose model | Video → 3D keypoints | Phases 1–2: MediaPipe BlazePose, mapped to `kq-skel-v1` (16 joints direct, 5 derived). Phase 3: our own model trained with TAO Toolkit on real + synthetic data (lead candidate: BodyPose3DNet) | Phone: TFLite / Core ML / ONNX export · Web: MediaPipe in the browser |
 | M2 | Rep segmenter | Split a set into reps, phases | Small temporal model (1D CNN / transformer) on keypoint sequences, PyTorch | On device (live) + worker (authoritative) |
 | M3 | Compensation classifier | Detect valgus, hip hike, trunk lean, shrug, etc. | Rule features from `kinetiq-core` + temporal classifier, PyTorch | On device (live cue) + worker (recorded event) |
 | C1 | Biomechanics engine | Joint angles, ROM, symmetry, stability, velocity, variability | Deterministic code in `kinetiq-core` (NumPy/SciPy) | Worker, API, notebooks |
@@ -33,7 +33,7 @@ synthetic (S3)            ─┘          │
                                       │
                          evaluation gates (see below)
                                       │
-                 export: ONNX → TFLite / Core ML · TensorRT engine (RTX, Jetson)
+                 export: ONNX → TFLite / Core ML (devices) · TensorRT (cloud GPU, optional)
                                       │
                          model_registry row + artefacts in storage
                                       │
@@ -70,7 +70,7 @@ synthetic (S3)            ─┘          │
 | MVP batch jobs, GPU dev | DigitalOcean GPU Droplet (RTX 4000 Ada, has RT cores) | Billed until destroyed; see [DEPLOYMENT.md](DEPLOYMENT.md#gpu-jobs-create--run--destroy) |
 | Heavy training and sim | NVIDIA DGX Cloud Lepton Batch Jobs | Runs, then releases GPU; marketplace pricing |
 | Interactive GPU dev | Lepton Dev Pods or NVIDIA Brev | Stop when done |
-| Showcase | RTX laptop or Jetson Orin | Owned hardware |
+| Showcase | The same cloud services and GPU jobs as production | No owned NVIDIA hardware |
 
 Rules:
 

@@ -72,7 +72,7 @@ Provisional pain rule for adaptive sessions: a report of 5/10 or more, or any sh
 
 ## Showcase demo story
 
-A patient scans → the app catches a compensation and corrects it by voice → it scores a weekly sit-to-stand → the clinician dashboard shows the forecast curve with a drift flag. Run on an RTX laptop or Jetson Orin with local TensorRT pose so the demo is offline-capable and genuinely NVIDIA-accelerated.
+A patient scans → the app catches a compensation and corrects it by voice → it scores a weekly sit-to-stand → the clinician dashboard shows the forecast curve with a drift flag. Pose runs on the demo device; the voice coach (Riva), the explanation (NIM) and the GPU jobs behind the forecast and simulation run on NVIDIA in the cloud.
 
 ## Scope boundaries
 
@@ -84,7 +84,7 @@ Out of scope for MVP: diagnosis, treatment decisions without a clinician, multi-
 
 - Knee flexion agrees with long-arm goniometry on a validation set: mean bias within ±2°, mean absolute error ≤ 5°, 95% limits of agreement within ±10° (decision 024).
 - Compensation detector precision and recall reviewed and accepted by a registered physiotherapist.
-- A complete showcase demo runs end to end on NVIDIA hardware without network dependency.
+- A complete showcase demo runs end to end, with its NVIDIA parts served from the cloud.
 - A pilot with at least one physiotherapy practice.
 
 ## Open decisions
