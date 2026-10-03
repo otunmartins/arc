@@ -4,6 +4,7 @@ Architecture decision log. Newest first. Add a row for every decision that chang
 
 | # | Date | Decision | Why | Alternatives considered |
 | --- | --- | --- | --- | --- |
+| 020 | 2026-10-03 | Pose model through the showcase is an existing open model: TensorRT-accelerated on the showcase rig, mobile runtimes on phones. Our own TAO-trained model moves to Phase 3. Refines 008 | No labelled training data yet, so a self-trained model would be worse than existing ones; the keypoint contract lets the model be swapped later without downstream changes | TAO-trained model for the showcase (weeks of data collection and training; TAO support for trainable 3D body pose still to be verified) |
 | 019 | 2026-10-03 | Object storage on DigitalOcean Spaces (UK/EU region) | Same provider, network and data processing agreement as the API and workers; S3-compatible, so a later move is a config change | Cloudflare R2 (no egress fees, but a second provider holding health data; keypoint files are small, so egress is minor) |
 | 018 | 2026-10-03 | Working assumption for the first condition: post-ACL reconstruction. Conditions named in these docs are examples, not a shortlist; the final condition and its test battery are chosen with the advising physiotherapists | Surgery date gives a clear time zero and an expected recovery trajectory, which the forecast and drift flag need; knee ROM, extension deficit and knee valgus are already core metrics | Knee osteoarthritis, as one other example (larger population and a good match for sit-to-stand and TUG, but no time zero and no recovery curve to forecast); other conditions not yet assessed |
 | 017 | 2026-10-03 | Self-hosted Better Auth (`services/auth`, small Node service) storing users and sessions in Neon; issues JWTs that FastAPI verifies via JWKS | Free; documented Expo (iOS, Android, web) integration and two-factor plugin; identity data stays in our own London database | Clerk (paid, third party holds identities); Neon Auth (managed Better Auth; docs cover neither React Native nor MFA); Auth.js (maintenance mode, web only) |
@@ -29,5 +30,7 @@ Architecture decision log. Newest first. Add a row for every decision that chang
 The single list of open decisions; other docs link here.
 
 - [ ] Final first condition and test battery (working assumption: post-ACL reconstruction, decision 018)
+- [ ] Which existing pose model to use (must give 3D keypoints mappable to `kq-skel-v1`, convert to TensorRT and run on phones and web; licence must allow commercial use)
+- [ ] Whether TAO offers a trainable 3D body pose model; if not, the Phase 3 training route (decision 020)
 - [ ] Advising physiotherapists (one or two)
 - [ ] MHRA classification route for the rehab application

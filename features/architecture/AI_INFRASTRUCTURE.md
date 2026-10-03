@@ -1,12 +1,12 @@
 # AI infrastructure — KINETIQ
 
-How models are trained, served, simulated and governed. Every layer is built on NVIDIA tooling; phones run mobile exports of NVIDIA-trained models.
+How models are trained, served, simulated and governed. The stack is built on NVIDIA tooling. Through the showcase the pose model is an existing open model, accelerated with TensorRT on NVIDIA hardware; our own trained pose model arrives in Phase 3 (see [DECISIONS.md](../product/DECISIONS.md), decision 020).
 
 ## Model and simulation inventory
 
 | ID | Component | Purpose | Tech | Runs where |
 | --- | --- | --- | --- | --- |
-| M1 | Pose model | Video → 3D keypoints | TAO Toolkit (3D body pose), fine-tuned on real + synthetic data | Phone: TFLite / Core ML / ONNX export · Web: ONNX Runtime Web or MediaPipe · NVIDIA HW: TensorRT |
+| M1 | Pose model | Video → 3D keypoints | Phases 1–2: existing open pose model (choice pending), mapped to `kq-skel-v1`. Phase 3: our own model trained with TAO Toolkit on real + synthetic data (TAO 3D body pose support to be verified) | Phone: TFLite / Core ML / ONNX export · Web: ONNX Runtime Web or MediaPipe · NVIDIA HW: TensorRT |
 | M2 | Rep segmenter | Split a set into reps, phases | Small temporal model (1D CNN / transformer) on keypoint sequences, PyTorch | On device (live) + worker (authoritative) |
 | M3 | Compensation classifier | Detect valgus, hip hike, trunk lean, shrug, etc. | Rule features from `kinetiq-core` + temporal classifier, PyTorch | On device (live cue) + worker (recorded event) |
 | C1 | Biomechanics engine | Joint angles, ROM, symmetry, stability, velocity, variability | Deterministic code in `kinetiq-core` (NumPy/SciPy) | Worker, API, notebooks |
@@ -21,6 +21,8 @@ How models are trained, served, simulated and governed. Every layer is built on 
 ## Pipelines
 
 ### Training pipeline (M1–M3)
+
+M2 and M3 are trained from Phase 2. M1 joins this pipeline in Phase 3; until then the existing pose model skips training and enters at the export step, and still gets a `model_registry` row and a pinned version.
 
 ```
 real capture (consented)  ─┐
@@ -94,7 +96,7 @@ Rules:
 
 | Model | Gate before release |
 | --- | --- |
-| M1 pose | Joint-angle error vs lab motion capture / goniometry within agreed tolerance on held-out real data; no regression vs current version |
+| M1 pose | Joint-angle error vs lab motion capture / goniometry within agreed tolerance on held-out real data; no regression vs current version. Applies to the existing model too: it is evaluated before use, even though we did not train it |
 | M3 compensation | Precision and recall per compensation on physio-labelled real data; reviewed by advising physiotherapists |
 | F1 forecaster | Calibration of predictive intervals on held-out patients; drift flag false-alarm rate reviewed |
 | S2 surrogate | Error vs held-out S1 runs within agreed tolerance across body types |
