@@ -11,6 +11,8 @@ Local setup, environment variables, testing and CI. Commands for the full target
 | Repo root (Python) | `uv` workspace (`pyproject.toml`, `uv.lock`, Python 3.12) with ruff, pyright and pytest. |
 | `packages/contracts` | `kq-skel-v1` skeleton, scan header schema, `.kqk.gz` encoder/decoder in Python and TypeScript, with tests. Measurement schemas not yet added. |
 | `packages/kinetiq-core` | Preprocessing (confidence mask, resample, gap fill, smoothing), capture quality, joint angles, the first seven metrics and a synthetic pose generator, with known-answer tests. Status per metric is in [DATA.md](../data/DATA.md#implementation-status-kinetiq-core-010). |
+| Pose spike (web) | The app's Scan tab runs BlazePose on the webcam in the browser, maps it to `kq-skel-v1` and saves a `.kqk.gz` file plus the raw model output as JSON. iOS and Android capture is not built. |
+| `tools/inspect_scan.py` | Prints capture quality and metrics for a `.kqk.gz` file. |
 | `services/`, `infra/` | Not started. Build order: database → API → workers → app. |
 
 ## Prerequisites
@@ -38,6 +40,18 @@ pnpm --filter mobile exec expo export -p web   # static web build into apps/mobi
 - Expo ships breaking changes each SDK release; check the versioned docs (`https://docs.expo.dev/versions/v57.0.0/`) before using an Expo API.
 - Camera and on-device pose need native modules, so the app needs a development build (`npx expo run:android|ios` or `eas build --profile development`) rather than Expo Go.
 - Never edit generated `ios/` or `android/` folders by hand; configure native behaviour in `app.json` and config plugins.
+
+## Trying a scan end to end
+
+```bash
+pnpm web                                             # open the Scan tab, start the camera, record, stop
+uv run python tools/inspect_scan.py path/to/scan-….kqk.gz
+```
+
+- The browser downloads two files per recording: the `.kqk.gz` scan and a `.raw.json` with the model's image-plane and world landmarks per frame, kept for the validation study.
+- The pose library, its wasm files and the model are loaded from public CDNs (jsDelivr and Google) at run time; the browser fetches them, the video does not leave the page. Self-hosting them is a to-do before any real use.
+- Metro cannot bundle `@mediapipe/tasks-vision`, so the app loads it as a browser module at run time and the npm package is installed for its types only. Keep the version in `apps/mobile/src/pose/web-pose-session.ts` in step with `package.json`.
+- Browsers do not report gravity, so web scans have `camera.gravity` set to `null`.
 
 ## Python and contracts
 

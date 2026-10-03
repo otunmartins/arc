@@ -41,6 +41,17 @@ Left/right are the **subject's** left and right.
 - Target 30 Hz; workers resample to 30 Hz.
 - Body-frame transforms, smoothing and gap filling happen in `kinetiq-core`, never on device.
 
+### Mapping from BlazePose
+
+The app converts MediaPipe BlazePose world landmarks (33 points) in `apps/mobile/src/pose/blazepose.ts`:
+
+- **Direct (16 joints):** shoulders, elbows, wrists, hips, knees, ankles, heels and foot index points.
+- **Derived (5 joints):** `pelvis` is the midpoint of the hips; `neck` the midpoint of the shoulders; `spine_mid` and `chest` sit 50% and 75% of the way from pelvis to neck; `head` is the midpoint of the ears. A derived joint takes the confidence of its less confident source.
+- **Confidence** is BlazePose's visibility score.
+- **Axes:** BlazePose's y (down) and z (away from the camera) are flipped to match the contract.
+- **Known gap:** BlazePose places the origin at the hip centre, so the keypoints are camera-aligned but not positioned in camera space. Joint angles are unaffected. Anything that needs the body's movement through the room (sway, walking tests) needs the position reconstructed first.
+- In a side-on view the far hip and shoulder have low visibility, so the derived trunk joints are often masked as missing; measures that need the trunk are then not produced.
+
 ### Scan header (JSON)
 
 ```json
@@ -51,7 +62,7 @@ Left/right are the **subject's** left and right.
   "scan_id": "uuid",
   "pose_model": {"id": "kq-pose", "version": "1.0.0", "runtime": "tflite"},
   "device": {"platform": "ios", "model": "iPhone15,3", "app_version": "0.1.0"},
-  "camera": {"fps": 30, "width": 1280, "height": 720, "orientation": "portrait", "height_m": null, "gravity": [0, -1, 0]},
+  "camera": {"fps": 30, "width": 1280, "height": 720, "orientation": "portrait", "view": "side_left", "height_m": null, "gravity": [0, -1, 0]},
   "battery": {"id": "rehab-knee", "version": "1"},
   "segment": {"kind": "test", "code": "sts_30s"},
   "frame_count": 900,
@@ -64,6 +75,7 @@ Header rules, enforced by the Pydantic model in `packages/contracts` (the source
 - All fields are required; unknown fields are rejected. A new field means a new `format_version`.
 - `pose_model.runtime`: `tflite`, `coreml`, `onnx`, `mediapipe` or `tensorrt`.
 - `device.platform`: `ios`, `android`, `web` or `edge`. `segment.kind`: `assessment`, `exercise` or `test`.
+- `camera.view`: which side of the subject faces the camera: `front`, `side_left` or `side_right` (the subject's left or right).
 - `camera.orientation`: `portrait` or `landscape`. `camera.height_m` may be `null`.
 - `camera.gravity`: unit vector pointing down in camera space, from the device's motion sensor at scan start; `null` if the device cannot report it (for example a desktop webcam). Workers use it as the vertical reference; with `null` they fall back to the camera's +Y axis.
 - `started_at` must carry a timezone.
@@ -144,7 +156,7 @@ Measurement error depends heavily on how the phone is placed, so each test fixes
 | Framing | Whole body in frame with a margin, one person only |
 | Subject | Knees and ankles visible (shorts or fitted clothing), even lighting, plain background where possible |
 
-A scan outside these limits is flagged and not scored. The scan header does not yet record which view was used; that field is added with the pose spike.
+A scan outside these limits is flagged and not scored. The view used is recorded in `camera.view`.
 
 ## Object storage layout
 

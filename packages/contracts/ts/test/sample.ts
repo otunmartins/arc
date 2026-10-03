@@ -17,6 +17,7 @@ export function sampleHeader(frameCount = FRAME_COUNT): ScanHeader {
       width: 1280,
       height: 720,
       orientation: "portrait",
+      view: "side_left",
       height_m: null,
       gravity: [0, -1, 0],
     },

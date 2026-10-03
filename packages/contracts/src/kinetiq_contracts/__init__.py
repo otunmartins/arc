@@ -1,6 +1,7 @@
 from .header import (
     Battery,
     Camera,
+    CameraView,
     Device,
     Orientation,
     Platform,
@@ -32,6 +33,7 @@ __all__ = [
     "SKELETON_VERSION",
     "Battery",
     "Camera",
+    "CameraView",
     "Device",
     "KqkError",
     "KqkScan",

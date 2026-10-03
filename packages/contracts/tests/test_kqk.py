@@ -42,6 +42,7 @@ def sample_header(frame_count: int = FRAME_COUNT) -> ScanHeader:
                 "width": 1280,
                 "height": 720,
                 "orientation": "portrait",
+                "view": "side_left",
                 "height_m": None,
                 "gravity": [0, -1, 0],
             },

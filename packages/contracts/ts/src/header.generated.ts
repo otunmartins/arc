@@ -33,6 +33,7 @@ export interface Camera {
   width: number;
   height: number;
   orientation: "portrait" | "landscape";
+  view: "front" | "side_left" | "side_right";
   height_m: number | null;
   gravity: [number, number, number] | null;
 }

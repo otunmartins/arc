@@ -41,6 +41,14 @@
           ],
           "type": "string"
         },
+        "view": {
+          "enum": [
+            "front",
+            "side_left",
+            "side_right"
+          ],
+          "type": "string"
+        },
         "height_m": {
           "anyOf": [
             {
@@ -73,6 +81,7 @@
         "width",
         "height",
         "orientation",
+        "view",
         "height_m",
         "gravity"
       ],

@@ -9,6 +9,8 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validato
 PoseRuntime = Literal["tflite", "coreml", "onnx", "mediapipe", "tensorrt"]
 Platform = Literal["ios", "android", "web", "edge"]
 Orientation = Literal["portrait", "landscape"]
+# Which side of the subject faces the camera.
+CameraView = Literal["front", "side_left", "side_right"]
 SegmentKind = Literal["assessment", "exercise", "test"]
 
 
@@ -33,6 +35,7 @@ class Camera(_Model):
     width: int = Field(gt=0)
     height: int = Field(gt=0)
     orientation: Orientation
+    view: CameraView
     height_m: float | None = Field(gt=0)
     # Unit vector pointing down (the way gravity pulls) in camera space; null if unknown.
     gravity: Annotated[list[float], Field(min_length=3, max_length=3)] | None
