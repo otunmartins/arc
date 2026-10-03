@@ -47,9 +47,9 @@ def knee_valgus_peak(xyz: FloatArray, side: Side) -> Measurement | None:
     return _measure("knee_valgus_peak", side, _max(angles.knee_valgus(xyz, side)))
 
 
-def trunk_lean_peak(xyz: FloatArray) -> Measurement | None:
-    """Largest lean to either side."""
-    return _measure("trunk_lean_peak", "none", _max(np.abs(angles.trunk_lean(xyz))))
+def trunk_lean_peak(xyz: FloatArray, vertical: FloatArray = angles.CAMERA_UP) -> Measurement | None:
+    """Largest lean to either side. `vertical` comes from `angles.vertical_from_gravity`."""
+    return _measure("trunk_lean_peak", "none", _max(np.abs(angles.trunk_lean(xyz, vertical))))
 
 
 def symmetry_index(left: Measurement, right: Measurement) -> Measurement | None:

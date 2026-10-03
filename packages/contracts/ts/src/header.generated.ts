@@ -34,6 +34,7 @@ export interface Camera {
   height: number;
   orientation: "portrait" | "landscape";
   height_m: number | null;
+  gravity: [number, number, number] | null;
 }
 export interface Battery {
   id: string;

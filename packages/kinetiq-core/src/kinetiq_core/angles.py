@@ -4,9 +4,11 @@ Every function takes `xyz` with shape (frames, 21, 3) in metres and returns radi
 shape (frames,). A frame with a missing joint (NaN) gives NaN.
 
 Angles measured in the body frame do not depend on where the camera is. `trunk_lean` and
-`pelvic_obliquity` are measured against vertical and assume the camera's +Y axis is up.
+`pelvic_obliquity` are measured against `vertical`; pass `vertical_from_gravity(...)` so a
+tilted camera does not bias them.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -28,6 +30,16 @@ class BodyFrame:
     lateral: FloatArray  # toward the subject's left
     up: FloatArray  # along the trunk, pelvis to neck
     forward: FloatArray  # the way the subject faces
+
+
+def vertical_from_gravity(gravity: Sequence[float] | None) -> FloatArray:
+    """Up direction in camera space from the scan header's `camera.gravity`.
+
+    Falls back to the camera's +Y axis when the device did not report gravity.
+    """
+    if gravity is None:
+        return CAMERA_UP
+    return -normalise(np.asarray(gravity, dtype=np.float64))
 
 
 def joint(xyz: FloatArray, name: str) -> FloatArray:

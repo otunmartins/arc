@@ -51,7 +51,7 @@ Left/right are the **subject's** left and right.
   "scan_id": "uuid",
   "pose_model": {"id": "kq-pose", "version": "1.0.0", "runtime": "tflite"},
   "device": {"platform": "ios", "model": "iPhone15,3", "app_version": "0.1.0"},
-  "camera": {"fps": 30, "width": 1280, "height": 720, "orientation": "portrait", "height_m": null},
+  "camera": {"fps": 30, "width": 1280, "height": 720, "orientation": "portrait", "height_m": null, "gravity": [0, -1, 0]},
   "battery": {"id": "rehab-knee", "version": "1"},
   "segment": {"kind": "test", "code": "sts_30s"},
   "frame_count": 900,
@@ -65,6 +65,7 @@ Header rules, enforced by the Pydantic model in `packages/contracts` (the source
 - `pose_model.runtime`: `tflite`, `coreml`, `onnx`, `mediapipe` or `tensorrt`.
 - `device.platform`: `ios`, `android`, `web` or `edge`. `segment.kind`: `assessment`, `exercise` or `test`.
 - `camera.orientation`: `portrait` or `landscape`. `camera.height_m` may be `null`.
+- `camera.gravity`: unit vector pointing down in camera space, from the device's motion sensor at scan start; `null` if the device cannot report it (for example a desktop webcam). Workers use it as the vertical reference; with `null` they fall back to the camera's +Y axis.
 - `started_at` must carry a timezone.
 
 ### Binary file `*.kqk.gz`
@@ -112,7 +113,7 @@ How the angles are measured:
 - **Body frame:** lateral axis from right hip to left hip, up axis from pelvis to neck (made perpendicular to lateral), forward axis as their cross product. Angles in this frame do not depend on camera position.
 - **Sign conventions:** hip flexion is positive forward; shoulder abduction is positive away from the body; knee valgus is positive when the knee moves toward the midline; trunk lean is positive toward the subject's left (the peak metric takes the larger of either direction).
 - **Knee flexion is unsigned**, so hyperextension reads as a small positive angle and `knee_extension_deficit` cannot go below 0.
-- **Trunk lean and pelvic obliquity are measured against vertical, taken as the camera's +Y axis.** A tilted phone biases them. The scan header carries no gravity direction yet; adding one is a contract change to consider before these two are relied on.
+- **Trunk lean and pelvic obliquity are measured against vertical**, taken from `camera.gravity` in the scan header so a tilted phone does not bias them. When gravity is `null` the camera's +Y axis is used and a tilted camera does bias the reading.
 - A metric is not produced when the joints it needs were never visible; frames with a missing joint are skipped.
 
 ### Preprocessing defaults (proposed, to confirm with clinical advisors)

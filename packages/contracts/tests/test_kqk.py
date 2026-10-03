@@ -43,6 +43,7 @@ def sample_header(frame_count: int = FRAME_COUNT) -> ScanHeader:
                 "height": 720,
                 "orientation": "portrait",
                 "height_m": None,
+                "gravity": [0, -1, 0],
             },
             "battery": {"id": "rehab-knee", "version": "1"},
             "segment": {"kind": "test", "code": "sts_30s"},
@@ -204,6 +205,18 @@ def test_rejects_unknown_skeleton() -> None:
     header_json = sample_header(frame_count=0).model_dump_json().replace("kq-skel-v1", "other")
     with pytest.raises(KqkError, match="invalid header"):
         decode_kqk(raw_file(header_json.encode(), b""))
+
+
+def test_gravity_may_be_unknown_but_must_be_a_unit_vector() -> None:
+    header = sample_header().model_dump()
+    header["camera"]["gravity"] = None
+    assert ScanHeader.model_validate(header).camera.gravity is None
+    header["camera"]["gravity"] = [0.0, -0.6, -0.8]
+    assert ScanHeader.model_validate(header).camera.gravity == [0.0, -0.6, -0.8]
+    for bad in ([0.0, -9.81, 0.0], [0.0, 0.0, 0.0], [0.0, float("nan"), 0.0], [0.0, -1.0]):
+        header["camera"]["gravity"] = bad
+        with pytest.raises(ValueError):
+            ScanHeader.model_validate(header)
 
 
 def test_rejects_unknown_header_field() -> None:

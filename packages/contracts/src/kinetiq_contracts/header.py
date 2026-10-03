@@ -1,9 +1,10 @@
 """Scan header: the JSON block at the start of every `.kqk.gz` file."""
 
-from typing import Literal
+import math
+from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
 
 PoseRuntime = Literal["tflite", "coreml", "onnx", "mediapipe", "tensorrt"]
 Platform = Literal["ios", "android", "web", "edge"]
@@ -33,6 +34,15 @@ class Camera(_Model):
     height: int = Field(gt=0)
     orientation: Orientation
     height_m: float | None = Field(gt=0)
+    # Unit vector pointing down (the way gravity pulls) in camera space; null if unknown.
+    gravity: Annotated[list[float], Field(min_length=3, max_length=3)] | None
+
+    @field_validator("gravity")
+    @classmethod
+    def _gravity_is_a_unit_vector(cls, value: list[float] | None) -> list[float] | None:
+        if value is not None and not math.isclose(math.hypot(*value), 1.0, abs_tol=0.01):
+            raise ValueError("gravity must be a unit vector")
+        return value
 
 
 class Battery(_Model):

@@ -51,6 +51,21 @@
               "type": "null"
             }
           ]
+        },
+        "gravity": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -58,7 +73,8 @@
         "width",
         "height",
         "orientation",
-        "height_m"
+        "height_m",
+        "gravity"
       ],
       "title": "Camera",
       "type": "object"

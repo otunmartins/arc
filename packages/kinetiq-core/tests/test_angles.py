@@ -103,6 +103,32 @@ def test_trunk_lean_ignores_which_way_the_subject_faces() -> None:
     assert degrees(angles.trunk_lean(turned)) == pytest.approx(10.0)
 
 
+def test_vertical_from_gravity() -> None:
+    assert angles.vertical_from_gravity(None) == pytest.approx([0.0, 1.0, 0.0])
+    assert angles.vertical_from_gravity([0.0, -2.0, 0.0]) == pytest.approx([0.0, 1.0, 0.0])
+    assert angles.vertical_from_gravity((0.0, -0.6, -0.8)) == pytest.approx([0.0, 0.6, 0.8])
+
+
+def test_gravity_corrects_trunk_lean_and_pelvic_obliquity_for_a_tilted_camera() -> None:
+    lean = frames(synthetic.with_trunk_lean(synthetic.neutral_pose(), np.radians(10.0)))
+    tilt = frames(synthetic.with_pelvic_obliquity(synthetic.neutral_pose(), np.radians(7.0)))
+    roll, pitch = np.radians(12.0), np.radians(25.0)
+    about_z = np.array(
+        [[np.cos(roll), -np.sin(roll), 0], [np.sin(roll), np.cos(roll), 0], [0, 0, 1]]
+    )
+    about_x = np.array(
+        [[1, 0, 0], [0, np.cos(pitch), -np.sin(pitch)], [0, np.sin(pitch), np.cos(pitch)]]
+    )
+    camera = about_x @ about_z  # world → tilted camera
+    gravity = camera @ np.array([0.0, -1.0, 0.0])
+    vertical = angles.vertical_from_gravity(gravity.tolist())
+
+    assert degrees(angles.trunk_lean(lean @ camera.T, vertical)) == pytest.approx(10.0)
+    assert degrees(angles.pelvic_obliquity(tilt @ camera.T, vertical)) == pytest.approx(7.0)
+    # Without the correction the 12° camera roll leaks straight into the reading.
+    assert abs(degrees(angles.trunk_lean(lean @ camera.T)) - 10.0) > 5.0
+
+
 @pytest.mark.parametrize("angle_deg", [-12.0, 0.0, 7.0])
 def test_pelvic_obliquity_is_positive_when_left_hip_is_higher(angle_deg: float) -> None:
     xyz = frames(synthetic.with_pelvic_obliquity(synthetic.neutral_pose(), np.radians(angle_deg)))
