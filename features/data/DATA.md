@@ -103,6 +103,31 @@ Internal units are SI; presentation converts. Every metric row records `method_v
 | `fatigue_slope` | Fatigue | ratio/rep | — | Slope of normalised rep quality score across a set |
 | `knee_load_peak_est` | Load (sim) | N·m/kg | L/R | Peak knee joint moment estimate from S2 surrogate |
 
+### Implementation status (`kinetiq-core` 0.1.0)
+
+Implemented: `knee_flexion_peak`, `knee_extension_deficit`, `hip_flexion_peak`, `shoulder_abduction_peak`, `knee_valgus_peak`, `trunk_lean_peak`, `symmetry_index`. Pelvic obliquity is available as a time series; `pelvic_drop_peak` waits for single-leg stance detection. The stability, test, velocity, consistency, fatigue and load metrics are not yet implemented.
+
+How the angles are measured:
+
+- **Body frame:** lateral axis from right hip to left hip, up axis from pelvis to neck (made perpendicular to lateral), forward axis as their cross product. Angles in this frame do not depend on camera position.
+- **Sign conventions:** hip flexion is positive forward; shoulder abduction is positive away from the body; knee valgus is positive when the knee moves toward the midline; trunk lean is positive toward the subject's left (the peak metric takes the larger of either direction).
+- **Knee flexion is unsigned**, so hyperextension reads as a small positive angle and `knee_extension_deficit` cannot go below 0.
+- **Trunk lean and pelvic obliquity are measured against vertical, taken as the camera's +Y axis.** A tilted phone biases them. The scan header carries no gravity direction yet; adding one is a contract change to consider before these two are relied on.
+- A metric is not produced when the joints it needs were never visible; frames with a missing joint are skipped.
+
+### Preprocessing defaults (proposed, to confirm with clinical advisors)
+
+Applied by `kinetiq_core.prepare` before any metric:
+
+| Step | Default |
+| --- | --- |
+| Joint treated as missing below confidence | 0.5 |
+| Resample to an even rate | 30 Hz, linear interpolation |
+| Longest gap filled by interpolation | 200 ms; longer gaps stay missing |
+| Smoothing | Zero-lag Butterworth low-pass, 6 Hz cutoff |
+
+`scans.quality_score` is currently the share of (frame, joint) samples that are usable, over the joints a test needs.
+
 Adding a metric: add it to `metric_definitions` (migration), implement it in `kinetiq-core` with known-answer tests, document it here.
 
 ## Object storage layout

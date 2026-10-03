@@ -24,7 +24,8 @@ uv run pytest     # Python tests
 | --- | --- |
 | [apps/mobile](apps/mobile) | Expo (React Native) app for iOS, Android and web |
 | [packages/contracts](packages/contracts) | Keypoint contract: skeleton, scan header, `.kqk.gz` codec (Python + TypeScript) |
+| [packages/kinetiq-core](packages/kinetiq-core) | Biomechanics: preprocessing, joint angles and movement metrics |
 | [features](features/README.md) | Project documentation |
 | [CLAUDE.md](CLAUDE.md) | Golden rules, stack and conventions |
 
-The biomechanics library, backend services and infrastructure are planned; see [DEVELOPMENT.md](features/architecture/DEVELOPMENT.md) for what exists today and [ROADMAP.md](features/product/ROADMAP.md) for what comes next.
+Backend services and infrastructure are planned; see [DEVELOPMENT.md](features/architecture/DEVELOPMENT.md) for what exists today and [ROADMAP.md](features/product/ROADMAP.md) for what comes next.

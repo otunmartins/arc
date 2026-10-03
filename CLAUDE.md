@@ -14,7 +14,7 @@ Full context: [features/product/PROJECT_OVERVIEW.md](features/product/PROJECT_OV
 2. **The LLM never computes or invents numbers.** Every number shown to a user comes from `kinetiq-core` (biomechanics), a simulation, or a fitted model. The language layer only reads structured measurements and explains them, and it never diagnoses.
 3. **No heavy compute inside an API request.** Endpoints validate, persist and enqueue. Workers do the work.
 4. **One keypoint contract.** All platforms emit the canonical skeleton defined in `packages/contracts` (see [features/data/DATA.md](features/data/DATA.md)). Never let a platform-specific format reach the backend.
-5. **`kinetiq-core` stays pure.** No FastAPI, SQLAlchemy, cloud SDK or provider imports. Pure Python + NumPy/SciPy, fully unit-tested.
+5. **`kinetiq-core` stays pure.** No FastAPI, SQLAlchemy, cloud SDK or provider imports. Pure Python + NumPy/SciPy (plus `kinetiq-contracts` for the skeleton definition), fully unit-tested.
 6. **GPU jobs are portable containers.** No provider-specific code inside job logic. DigitalOcean today, DGX Cloud Lepton later: a deployment change, never a rewrite.
 7. **Health data stays in the UK/EU.** Neon (London), DigitalOcean (LON1). Never introduce a service that stores patient data elsewhere without a recorded decision in [features/product/DECISIONS.md](features/product/DECISIONS.md).
 8. **Clinical claims are not ours to make in code comments, copy or prompts.** Measures are estimates that support a clinician. Wording rules: [features/data/SECURITY_PRIVACY_COMPLIANCE.md](features/data/SECURITY_PRIVACY_COMPLIANCE.md).

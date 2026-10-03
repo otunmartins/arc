@@ -10,7 +10,8 @@ Local setup, environment variables, testing and CI. Commands for the full target
 | Repo root | pnpm workspace (`pnpm-workspace.yaml`, root `package.json` with shortcut scripts). |
 | Repo root (Python) | `uv` workspace (`pyproject.toml`, `uv.lock`, Python 3.12) with ruff, pyright and pytest. |
 | `packages/contracts` | `kq-skel-v1` skeleton, scan header schema, `.kqk.gz` encoder/decoder in Python and TypeScript, with tests. Measurement schemas not yet added. |
-| `packages/kinetiq-core`, `services/`, `infra/` | Not started. Build order: `kinetiq-core` → database → API → workers → app. |
+| `packages/kinetiq-core` | Preprocessing (confidence mask, resample, gap fill, smoothing), capture quality, joint angles, the first seven metrics and a synthetic pose generator, with known-answer tests. Status per metric is in [DATA.md](../data/DATA.md#implementation-status-kinetiq-core-010). |
+| `services/`, `infra/` | Not started. Build order: database → API → workers → app. |
 
 ## Prerequisites
 
@@ -46,7 +47,7 @@ Run from the repo root:
 uv sync                                       # create .venv and install the workspace
 uv run pytest                                 # Python tests
 uv run ruff check . && uv run ruff format .   # lint + format
-uv run pyright                                # type check (strict on contracts)
+uv run pyright                                # type check (strict on contracts and kinetiq-core)
 pnpm test                                     # TypeScript tests
 uv run python packages/contracts/build.py     # after changing the Pydantic models
 ```
