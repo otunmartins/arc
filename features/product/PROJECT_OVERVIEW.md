@@ -38,16 +38,37 @@ Camera-based fitness and rehab apps answer one question: *did the user do the ex
 
 ## First application: KINETIQ Rehab
 
-Clinician-supervised home rehabilitation for **one condition**. The working assumption is post-ACL reconstruction; conditions named in these docs (ACL reconstruction, knee osteoarthritis) are examples, and the final choice is made with the advising physiotherapists.
+Clinician-supervised home rehabilitation for **one condition**: post-ACL reconstruction, chosen provisionally (decisions 018 and 023). Other conditions named in these docs, such as knee osteoarthritis, are examples of where the platform could go next.
 
 MVP features:
 
 1. Guided scan with a hands-free voice coach (Riva)
 2. Real-time compensation detection with spoken correction
-3. Auto-scored standard tests: 30-second sit-to-stand, Timed Up and Go, single-leg balance, knee range of motion
+3. Auto-scored tests from the `rehab-knee` battery (below)
 4. Adaptive sessions within physio-set limits (fatigue and voice-reported pain)
 5. Recovery forecast: measured vs expected curve, drift flag
 6. Clinician dashboard: adherence, movement quality, tests, joint-load estimates, forecast
+
+### Test battery `rehab-knee` v1 (provisional)
+
+Set without a clinical advisor (see [DECISIONS.md](DECISIONS.md), decisions 022 and 023); a registered physiotherapist reviews it before any pilot with patients. The clinician enables each test for a patient when it is appropriate for their stage.
+
+| Test | Camera | What is reported | Typical stage |
+| --- | --- | --- | --- |
+| Heel-slide knee flexion (long sitting) | Side-on, operated leg nearest | Peak knee flexion; knee extension as a low-precision estimate | From the first weeks |
+| Squat to comfortable depth | Side-on | Peak knee and hip flexion, forward trunk angle | Once the clinician allows loaded bending |
+| 30-second sit-to-stand | Side-on | Number of full stands | Early and mid rehab; expected to stop discriminating later |
+| Single-leg balance, up to 30 s | Front-on | Time held, each leg | Strength and control stage |
+| Single-leg squat | Front-on | Frontal knee projection angle and trunk lean, each leg | Strength and control stage |
+
+Not in this battery: Timed Up and Go (kept in the metric catalogue for other conditions) and hop tests (clinic-only; unsupervised landings are a safety risk).
+
+Two limits the app and dashboard must state:
+
+- **Knee extension is not measured precisely enough to act on.** A loss of 3–5° matters clinically after ACL reconstruction, which is below what a single camera resolves. The clinician checks extension in person.
+- **The frontal knee projection angle is a 2D proxy for knee valgus**, not a measure of true valgus. It is repeatable enough to follow change in one patient (differences under about 8° are within measurement noise).
+
+Provisional pain rule for adaptive sessions: a report of 5/10 or more, or any sharp pain, stops the set and notifies the clinician; 3–4/10 holds progression. The clinician can set stricter limits per patient, never looser ones through the app.
 
 ## Showcase demo story
 
@@ -59,10 +80,10 @@ In scope for MVP: one condition, one exercise battery, patient app, clinician da
 
 Out of scope for MVP: diagnosis, treatment decisions without a clinician, multi-condition support, sports performance, insurer integrations, native wearables.
 
-## Success criteria (proposed, to confirm with clinical advisors)
+## Success criteria (provisional; see decision 022)
 
-- Joint-angle measures agree with clinician goniometry within an agreed tolerance on a validation set.
-- Compensation detector precision and recall reviewed and accepted by advising physiotherapists.
+- Knee flexion agrees with long-arm goniometry on a validation set: mean bias within ±2°, mean absolute error ≤ 5°, 95% limits of agreement within ±10° (decision 024).
+- Compensation detector precision and recall reviewed and accepted by a registered physiotherapist.
 - A complete showcase demo runs end to end on NVIDIA hardware without network dependency.
 - A pilot with at least one physiotherapy practice.
 

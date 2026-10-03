@@ -102,6 +102,7 @@ pnpm --filter mobile api:gen                   # regenerate TS client from OpenA
 - Before changing a schema, metric or contract, read [features/data/DATA.md](features/data/DATA.md) and update it in the same change.
 - Before adding a dependency or service, check [features/product/DECISIONS.md](features/product/DECISIONS.md); record new decisions there.
 - When unsure whether something is a clinical claim or touches patient data, stop and ask.
+- There is no clinical advisor yet. Where a clinical input is needed (thresholds, test choice, protocols), set it provisionally from published evidence, mark it "provisional", and add it to the review item in [features/product/DECISIONS.md](features/product/DECISIONS.md) (decision 022). Do not leave it undefined or defer it to an advisor.
 
 ## Docs index
 

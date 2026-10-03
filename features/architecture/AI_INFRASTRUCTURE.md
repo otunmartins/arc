@@ -6,7 +6,7 @@ How models are trained, served, simulated and governed. The stack is built on NV
 
 | ID | Component | Purpose | Tech | Runs where |
 | --- | --- | --- | --- | --- |
-| M1 | Pose model | Video → 3D keypoints | Phases 1–2: existing open pose model (choice pending), mapped to `kq-skel-v1`. Phase 3: our own model trained with TAO Toolkit on real + synthetic data (TAO 3D body pose support to be verified) | Phone: TFLite / Core ML / ONNX export · Web: ONNX Runtime Web or MediaPipe · NVIDIA HW: TensorRT |
+| M1 | Pose model | Video → 3D keypoints | Phases 1–2: MediaPipe BlazePose, mapped to `kq-skel-v1` (16 joints direct, 5 derived). Phase 3: our own model trained with TAO Toolkit on real + synthetic data (lead candidate: BodyPose3DNet) | Phone: TFLite / Core ML / ONNX export · Web: ONNX Runtime Web or MediaPipe · NVIDIA HW: TensorRT |
 | M2 | Rep segmenter | Split a set into reps, phases | Small temporal model (1D CNN / transformer) on keypoint sequences, PyTorch | On device (live) + worker (authoritative) |
 | M3 | Compensation classifier | Detect valgus, hip hike, trunk lean, shrug, etc. | Rule features from `kinetiq-core` + temporal classifier, PyTorch | On device (live cue) + worker (recorded event) |
 | C1 | Biomechanics engine | Joint angles, ROM, symmetry, stability, velocity, variability | Deterministic code in `kinetiq-core` (NumPy/SciPy) | Worker, API, notebooks |
@@ -92,17 +92,37 @@ Rules:
 | `synthetic.generate` | `gpu` | RTX GPU | Batch, operator |
 | `model.train` | `gpu` | GPU | Batch, operator |
 
-## Evaluation gates (proposed thresholds to confirm with clinical advisors)
+## Evaluation gates (provisional thresholds; see decision 022)
 
 | Model | Gate before release |
 | --- | --- |
-| M1 pose | Joint-angle error vs lab motion capture / goniometry within agreed tolerance on held-out real data; no regression vs current version. Applies to the existing model too: it is evaluated before use, even though we did not train it |
+| M1 pose | Knee flexion vs long-arm goniometer on held-out subjects in the standard capture setup: mean bias within ±2°, mean absolute error ≤ 5°, 95% limits of agreement within ±10°, same-day repeat ICC ≥ 0.90; no regression vs current version. Applies to BlazePose too: it is evaluated before use, even though we did not train it |
 | M3 compensation | Precision and recall per compensation on physio-labelled real data; reviewed by advising physiotherapists |
 | F1 forecaster | Calibration of predictive intervals on held-out patients; drift flag false-alarm rate reviewed |
 | S2 surrogate | Error vs held-out S1 runs within agreed tolerance across body types |
 | L1 explanations | Guardrail test suite: zero invented numbers, zero diagnoses, every number traceable to input |
 
 Every release records metrics in `model_registry.metrics`.
+
+### How M1 is expected to meet its gate
+
+Independent studies put raw single-camera 3D pose at about 14° error on knee flexion, so the gate is not met by the model alone. The measurement method, in order of expected effect:
+
+1. **Standard capture setup** per test (see the capture protocol in [DATA.md](../data/DATA.md#capture-protocol-provisional)).
+2. **In-plane angles for side-on tests:** measure knee and hip flexion in the image plane instead of through estimated depth.
+3. **Bias correction:** a versioned calibration in `kinetiq-core`, fitted on our validation data and checked on held-out subjects.
+4. **Bone-length consistency** across the frames of a scan.
+5. **Scan rejection** when the view, tilt or confidence is outside limits.
+
+The combined effect is an estimate from studies on other models and healthy volunteers; it is unproven for BlazePose and for post-surgical patients until the validation study is done.
+
+### Validation study (Phase 1)
+
+- 10–20 adult volunteers, consented; keypoints only are kept, as for any scan.
+- Standard side-on setup. Static knee flexion set with a long-arm goniometer at 30°, 60°, 90° and 120°, plus heel slides, squats and sit-to-stands; each repeated in a second same-day session.
+- Record both the image-plane and the 3D output of the pose model so the two can be compared.
+- Fit the correction with subjects held out (leave-one-subject-out); report bias, mean absolute error, limits of agreement and repeat reliability against the gate.
+- Healthy volunteers show the method works; they do not show it works on swollen or braced post-surgical knees. That needs the patient pilot.
 
 ## LLM rules (L1)
 

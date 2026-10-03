@@ -116,7 +116,7 @@ How the angles are measured:
 - **Trunk lean and pelvic obliquity are measured against vertical**, taken from `camera.gravity` in the scan header so a tilted phone does not bias them. When gravity is `null` the camera's +Y axis is used and a tilted camera does bias the reading.
 - A metric is not produced when the joints it needs were never visible; frames with a missing joint are skipped.
 
-### Preprocessing defaults (proposed, to confirm with clinical advisors)
+### Preprocessing defaults (provisional; see decision 022)
 
 Applied by `kinetiq_core.prepare` before any metric:
 
@@ -130,6 +130,21 @@ Applied by `kinetiq_core.prepare` before any metric:
 `scans.quality_score` is currently the share of (frame, joint) samples that are usable, over the joints a test needs.
 
 Adding a metric: add it to `metric_definitions` (migration), implement it in `kinetiq-core` with known-answer tests, document it here.
+
+## Capture protocol (provisional)
+
+Measurement error depends heavily on how the phone is placed, so each test fixes the setup and the app checks it before scoring. Provisional values (decision 022):
+
+| Item | Requirement |
+| --- | --- |
+| View | Side-on for flexion tests, with the operated leg nearest the camera; front-on for balance and single-leg squat |
+| Distance | 2.5–3 m from the subject |
+| Camera height | About hip height (roughly 1 m) |
+| Phone | Portrait, stationary on a stable surface, tilted no more than about 10° from upright (checked with `camera.gravity`) |
+| Framing | Whole body in frame with a margin, one person only |
+| Subject | Knees and ankles visible (shorts or fitted clothing), even lighting, plain background where possible |
+
+A scan outside these limits is flagged and not scored. The scan header does not yet record which view was used; that field is added with the pose spike.
 
 ## Object storage layout
 
